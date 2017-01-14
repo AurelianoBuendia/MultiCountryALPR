@@ -33,12 +33,12 @@ string getFilename(string s) {
     char sepExt='.';
     
 #ifdef _WIN32
-    sep = '\\';
+	sep = '\\';
 #endif
     
     size_t i = s.rfind(sep, s.length( ));
     if (i != string::npos) {
-        string fn= (s.substr(i+1, s.length( ) - i));
+        string fn = (s.substr(i+1, s.length( ) - i));
         size_t j = fn.rfind(sepExt, fn.length( ));
         if (i != string::npos) {
             return fn.substr(0,j);
@@ -52,7 +52,12 @@ string getFilename(string s) {
 
 int main(int argc, char** argv)
 {
-    cout << "OpenCV Automatic Number Plate Recognition\n";
+	string path = "/Users/marcosarturgoncalvessilva/repos/PlateRecog/PlateRecog/src/";
+#ifdef _WIN32
+	path = "C:\\repos\\MultiCountryALPR\\";
+#endif
+	
+	cout << "OpenCV Automatic Number Plate Recognition\n";
     char* filename;
     Mat input_image;
     
@@ -80,13 +85,13 @@ int main(int argc, char** argv)
     //Read file storage.
     FileStorage fs;
     //fs.open("SVM.xml", FileStorage::READ);
-    fs.open("/Users/marcosarturgoncalvessilva/repos/PlateRecog/PlateRecog/src/SVM.xml", FileStorage::READ);
+    fs.open(path + "SVM.xml", FileStorage::READ);
     Mat SVM_TrainingData;
     Mat SVM_Classes;
     fs["TrainingData"] >> SVM_TrainingData;
     fs["classes"] >> SVM_Classes;
     
-    Ptr<SVM::SVM> svmClassifier = SVM::SVM::create();
+    Ptr<SVM> svmClassifier = SVM::SVM::create();
     svmClassifier->setType(SVM::C_SVC);
     svmClassifier->setKernel(SVM::LINEAR);
     svmClassifier->setDegree(0.0);
@@ -113,10 +118,10 @@ int main(int argc, char** argv)
     
     cout << "Num plates detected: " << plates.size() << "\n";
     //For each plate detected, recognize it with OCR
-    OCR ocr("/Users/marcosarturgoncalvessilva/repos/PlateRecog/PlateRecog/src/OCR.xml");
+    OCR ocr(path + "OCR.xml");
     cout << "OCR instance created and trained." << endl;
     ocr.saveSegments = true;
-    ocr._DEBUG = false;
+    ocr._DEBUGFLAG = false;
     ocr.filename = filename_withoutExt;
     for(int i = 0; i < plates.size(); i++) {
         Plate plate = plates[i];

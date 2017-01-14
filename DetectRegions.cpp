@@ -9,19 +9,20 @@
 *   http://www.packtpub.com/cool-projects-with-opencv/book
 *****************************************************************************/
 
+#include <ctime>
 #include "DetectRegions.h"
 #include "opencv2/imgproc/imgproc.hpp"
 
 void DetectRegions::setFilename(string s) {
-        filename=s;
+        filename = s;
 }
 
-DetectRegions::DetectRegions(){
-    showSteps=false;
-    saveRegions=false;
+DetectRegions::DetectRegions() {
+    showSteps = false;
+    saveRegions = false;
 }
 
-bool DetectRegions::verifySizes(RotatedRect mr){
+bool DetectRegions::verifySizes(RotatedRect mr) {
 
     float error=0.4;
     //Spain car plate size: 52x11 aspect 4,7272
@@ -30,17 +31,17 @@ bool DetectRegions::verifySizes(RotatedRect mr){
     int min= 15*aspect*15; // minimum area
     int max= 125*aspect*125; // maximum area
     //Get only patchs that match to a respect ratio.
-    float rmin= aspect-aspect*error;
-    float rmax= aspect+aspect*error;
+    float rmin = aspect-aspect*error;
+    float rmax = aspect+aspect*error;
 
-    int area= mr.size.height * mr.size.width;
-    float r= (float)mr.size.width / (float)mr.size.height;
-    if(r<1)
-        r= (float)mr.size.height / (float)mr.size.width;
+    int area = mr.size.height * mr.size.width;
+    float r = (float)mr.size.width / (float)mr.size.height;
+    if(r < 1)
+        r = (float)mr.size.height / (float)mr.size.width;
 
-    if(( area < min || area > max ) || ( r < rmin || r > rmax )){
+    if(( area < min || area > max ) || ( r < rmin || r > rmax )) {
         return false;
-    }else{
+    } else {
         return true;
     }
 
@@ -49,7 +50,7 @@ bool DetectRegions::verifySizes(RotatedRect mr){
 Mat DetectRegions::histeq(Mat in)
 {
     Mat out(in.size(), in.type());
-    if(in.channels()==3){
+    if(in.channels() == 3) {
         Mat hsv;
         vector<Mat> hsvSplit;
         cvtColor(in, hsv, CV_BGR2HSV);
@@ -65,7 +66,7 @@ Mat DetectRegions::histeq(Mat in)
 
 }
 
-vector<Plate> DetectRegions::segment(Mat input){
+vector<Plate> DetectRegions::segment(Mat input) {
     vector<Plate> output;
 
     //convert image to gray
@@ -105,10 +106,10 @@ vector<Plate> DetectRegions::segment(Mat input){
     //Remove patch that are no inside limits of aspect ratio and area.    
     while (itc!=contours.end()) {
         //Create bounding rect of object
-        RotatedRect mr= minAreaRect(Mat(*itc));
-        if( !verifySizes(mr)){
-            itc= contours.erase(itc);
-        }else{
+        RotatedRect mr = minAreaRect(Mat(*itc));
+        if( !verifySizes(mr)) {
+            itc = contours.erase(itc);
+        } else {
             ++itc;
             rects.push_back(mr);
         }
@@ -122,21 +123,21 @@ vector<Plate> DetectRegions::segment(Mat input){
             cv::Scalar(255,0,0), // in blue
             1); // with a thickness of 1
 
-    for(int i=0; i< rects.size(); i++){
+    for(int i = 0; i < rects.size(); i++) {
 
         //For better rect cropping for each posible box
         //Make floodfill algorithm because the plate has white background
         //And then we can retrieve more clearly the contour box
         circle(result, rects[i].center, 3, Scalar(0,255,0), -1);
         //get the min size between width and height
-        float minSize=(rects[i].size.width < rects[i].size.height)?rects[i].size.width:rects[i].size.height;
-        minSize=minSize-minSize*0.5;
+        float minSize = (rects[i].size.width < rects[i].size.height)?rects[i].size.width:rects[i].size.height;
+        minSize = minSize - minSize * 0.5;
         //initialize rand and get 5 points around center for floodfill algorithm
         srand ( time(NULL) );
         //Initialize floodfill parameters and variables
         Mat mask;
         mask.create(input.rows + 2, input.cols + 2, CV_8UC1);
-        mask= Scalar::all(0);
+        mask = Scalar::all(0);
         int loDiff = 30;
         int upDiff = 30;
         int connectivity = 4;
@@ -144,10 +145,10 @@ vector<Plate> DetectRegions::segment(Mat input){
         int NumSeeds = 10;
         Rect ccomp;
         int flags = connectivity + (newMaskVal << 8 ) + CV_FLOODFILL_FIXED_RANGE + CV_FLOODFILL_MASK_ONLY;
-        for(int j=0; j<NumSeeds; j++){
+        for(int j = 0; j < NumSeeds; j++) {
             Point seed;
-            seed.x=rects[i].center.x+rand()%(int)minSize-(minSize/2);
-            seed.y=rects[i].center.y+rand()%(int)minSize-(minSize/2);
+            seed.x = rects[i].center.x + rand() % (int)minSize - (minSize/2);
+            seed.y = rects[i].center.y + rand() % (int)minSize - (minSize/2);
             circle(result, seed, 1, Scalar(0,255,255), -1);
             int area = floodFill(input, mask, seed, Scalar(255,0,0), &ccomp, Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags);
         }
@@ -161,30 +162,30 @@ vector<Plate> DetectRegions::segment(Mat input){
         Mat_<uchar>::iterator itMask= mask.begin<uchar>();
         Mat_<uchar>::iterator end= mask.end<uchar>();
         for( ; itMask!=end; ++itMask)
-            if(*itMask==255)
+            if(*itMask == 255)
                 pointsInterest.push_back(itMask.pos());
 
         RotatedRect minRect = minAreaRect(pointsInterest);
 
-        if(verifySizes(minRect)){
+        if(verifySizes(minRect)) {
             // rotated rectangle drawing 
             Point2f rect_points[4]; minRect.points( rect_points );
-            for( int j = 0; j < 4; j++ )
-                line( result, rect_points[j], rect_points[(j+1)%4], Scalar(0,0,255), 1, 8 );    
+            for(int j = 0; j < 4; j++)
+                line(result, rect_points[j], rect_points[(j+1)%4], Scalar(0,0,255), 1, 8);    
 
             //Get rotation matrix
-            float r= (float)minRect.size.width / (float)minRect.size.height;
-            float angle=minRect.angle;    
-            if(r<1)
-                angle=90+angle;
-            Mat rotmat= getRotationMatrix2D(minRect.center, angle,1);
+            float r = (float)minRect.size.width / (float)minRect.size.height;
+            float angle = minRect.angle;    
+            if(r < 1)
+                angle = 90 + angle;
+            Mat rotmat = getRotationMatrix2D(minRect.center, angle, 1);
 
             //Create and rotate image
             Mat img_rotated;
             warpAffine(input, img_rotated, rotmat, input.size(), CV_INTER_CUBIC);
 
             //Crop image
-            Size rect_size=minRect.size;
+            Size rect_size = minRect.size;
             if(r < 1)
                 swap(rect_size.width, rect_size.height);
             Mat img_crop;
@@ -198,7 +199,7 @@ vector<Plate> DetectRegions::segment(Mat input){
             cvtColor(resultResized, grayResult, CV_BGR2GRAY); 
             blur(grayResult, grayResult, Size(3,3));
             grayResult=histeq(grayResult);
-            if(saveRegions){ 
+            if(saveRegions) { 
                 stringstream ss(stringstream::in | stringstream::out);
                 ss << "tmp/" << filename << "_" << i << ".jpg";
                 imwrite(ss.str(), grayResult);
@@ -212,11 +213,9 @@ vector<Plate> DetectRegions::segment(Mat input){
     return output;
 }
 
-vector<Plate> DetectRegions::run(Mat input){
-    
+vector<Plate> DetectRegions::run(Mat input) {
     //Segment image by white 
-    vector<Plate> tmp=segment(input);
-
+    vector<Plate> tmp = segment(input);
     //return detected and posibles regions
     return tmp;
 }

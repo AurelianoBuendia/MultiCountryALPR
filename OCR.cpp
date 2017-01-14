@@ -16,13 +16,13 @@ const int OCR::numCharacters = 30;
 
 CharSegment::CharSegment() {}
 CharSegment::CharSegment(Mat i, Rect p) {
-    img=i;
-    pos=p;
+    img = i;
+    pos = p;
 }
 
 OCR::OCR() {
     ann = ANN_MLP::create();
-    _DEBUG = false;
+    _DEBUGFLAG = false;
     trained = false;
     saveSegments = false;
     charSize = 20;
@@ -61,7 +61,7 @@ OCR::OCR() {
 
 OCR::OCR(string trainFile) {
     ann = ANN_MLP::create();
-    _DEBUG = false;
+    _DEBUGFLAG = false;
     trained = false;
     saveSegments = false;
     charSize = 20;
@@ -162,7 +162,7 @@ vector<CharSegment> OCR::segment(Plate plate) {
     if(_DEBUG)
         cout << "Num chars: " << output.size() << "\n";
     if(_DEBUG)
-        imshow("SEgmented Chars", result);
+        imshow("Segmented Chars", result);
     return output;
 }
 
@@ -258,7 +258,7 @@ Mat OCR::features(Mat in, int sizeData) {
     Mat lowData;
     resize(in, lowData, Size(sizeData, sizeData) );
 
-    if(_DEBUG)
+    if (_DEBUG)
         drawVisualFeatures(in, hhist, vhist, lowData);
 
     //Last 10 is the number of moments components

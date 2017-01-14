@@ -40,7 +40,7 @@ public:
 
 class OCR {
 public:
-    bool _DEBUG;
+    bool _DEBUGFLAG;
     bool saveSegments;
         string filename;
         static const int numCharacters;

@@ -17,6 +17,7 @@
 
 #include "OCR.h"
 
+#include <ctime>
 #include <iostream>
 #include <vector>
 
